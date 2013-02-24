@@ -209,6 +209,18 @@ class HolyFB2 {
                 }
             }
         }
+        
+        /*$text=  str_replace(Array("<br>","<i>","</i>","<b>"),
+                Array("<p></p>","<emphasis>"), $text)*/
+        $text=  str_replace(Array("<br>","</br>"),"</p><p>",$text);
+        $text=  str_replace(Array("<i>","</i>"),Array("<emphasis>","</emphasis>"),$text);
+        $text=  str_replace(Array("<b>","</b>"),Array("<strong>","</strong>"),$text);
+        if ($clear_img){
+            $text=  strip_tags($text, "<p><strong><emphasis>");
+        }else{
+            $text=  strip_tags($text, "<p><strong><emphasis><image>");
+        };
+        
         return $text;
     }
 
