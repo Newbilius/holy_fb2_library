@@ -220,7 +220,6 @@ class HolyFB2 {
         }else{
             $text=  strip_tags($text, "<p><strong><emphasis><image>");
         };
-        
         return $text;
     }
 
