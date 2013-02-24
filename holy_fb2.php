@@ -6,7 +6,7 @@
  *
  * @author     Моисеев Дмитрий aka Newbilius (Nubilius) <newbilius@gmail.com>
  * @copyright  2013
- * @link       https://github.com/Newbilius/habr_to_fb2
+ * @link       https://github.com/Newbilius/holy_fb2_library
  */
 include_once("strip_tags_smart/strip_tags_smart.php");
 
