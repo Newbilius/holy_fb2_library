@@ -1,5 +1,16 @@
 <?php
 
+function loadImageByType($filename, $type) {
+    switch ($type) {
+        case "image/gif":
+            return @imagecreatefromgif($filename);
+        default:
+            return false;
+    }
+}
+
+;
+
 class HolyFB2 {
 
     protected $file_name = "";
@@ -131,7 +142,7 @@ class HolyFB2 {
                 $out[] = $this->prepare_text("<p>" . $line . "</p>", false);
             }
         } else {
-            $out[] = $this->prepare_text($text, false);
+            $out[] = $this->prepare_text("<p>" . $text . "</p>", false);
         };
         $out[] = "</section>";
 
@@ -139,10 +150,29 @@ class HolyFB2 {
     }
 
     public function add_file($id, $path) {
+        $img_size = getimagesize($path);
+        $mime = $img_size['mime'];
+        $delete_after_complete = false;
+
+        if ($mime != "image/jpeg" && $mime != "image/png") {
+            $source = loadImageByType($path, $mime);
+            imagepng($source, "_tmp.png");
+            $mime = "image/png";
+            $path = "_tmp.png";
+            $delete_after_complete = true;
+        };
+
         $file_data = file_get_contents($path);
         $data = base64_encode($file_data);
-        $out = Array('<binary id="' . $id . '" content-type="image/jpeg">' . $data . '</binary>');
+
+
+        $out = Array('<binary id="' . $id . '" content-type="' . $mime . '">' . $data . '</binary>');
         $this->file_append($out);
+        if ($delete_after_complete) {
+            if (file_exists("_tmp.png")) {
+                unlink("_tmp.png");
+            }
+        }
     }
 
     protected function file_append($data, $create = false) {
@@ -161,19 +191,19 @@ class HolyFB2 {
             preg_match_all('/\<(.*)img(.*)src(.*)=(.*)\>/isU', $text, $result);
             if (is_array($result[4])) {
                 if (count($result[4]) > 0) {
-                    foreach ($result[4] as $_img){
-                        $_img_urls[]=str_replace("'","",$_img);
+                    foreach ($result[4] as $_img) {
+                        $_img_urls[] = str_replace("'", "", $_img);
                     }
                     preg_match_all('/\<img(.*)\>/isU', $text, $result2);
-                    foreach ($result2[0] as $_pic){
-                        $ok=false;
-                        foreach ($_img_urls as $_img){
-                           if (!$ok){
-                               if (strpos($_pic, $_img)!==FALSE){
-                                   $ok=true;
-                                   $text=str_replace($_pic, '<image l:href="#'.$_img.'"/>', $text);
-                               }
-                           }
+                    foreach ($result2[0] as $_pic) {
+                        $ok = false;
+                        foreach ($_img_urls as $_img) {
+                            if (!$ok) {
+                                if (strpos($_pic, $_img) !== FALSE) {
+                                    $ok = true;
+                                    $text = str_replace($_pic, '<image l:href="#' . $_img . '"/>', $text);
+                                }
+                            }
                         }
                     }
                 }
