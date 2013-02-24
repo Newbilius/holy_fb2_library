@@ -5,6 +5,10 @@ function loadImageByType($filename, $type) {
     switch ($type) {
         case "image/gif":
             return @imagecreatefromgif($filename);
+        case "image/jpeg":
+            return @imagecreatefromjpeg($filename);
+        case "image/png":
+            return @imagecreatefrompng($filename);
         default:
             return false;
     }
@@ -149,18 +153,74 @@ class HolyFB2 {
 
         $this->file_append($out);
     }
+    
+    private function _resize_img($source,$width_old,$height_old,$max_size) {
+        $width=$max_size;
+        $height=$max_size;
+        if (($width_old == 0) || ($height_old == 0)) {
+            $width_old = imagesx($source);
+            $height_old = imagesy($source);
+        }
+        if ($width == 0)
+            $width = $width_old;
+        if ($height == 0)
+            $height = $height_old;
+        $new_width = $width;
+        $new_height = $height;
 
-    public function add_file($id, $path) {
+        if ($new_width == 0) {
+            //жмем по известной высоте
+            $width = $width_old * $height / $height_old;
+        } elseif ($new_height == 0) {
+            //жмем по известной ширине
+            $height = $height_old * $width / $width_old;
+        } else {
+            //подгоняем к известной ширине и высоте
+            if ($height_old > $width_old) {
+                $width = $width_old * $height / $height_old;
+                if ($width > $width) {
+                    $width = $width;
+                    $height = $height_old * $width / $width_old;
+                }else
+                    $height = $height;
+            }else {
+                $height = $height_old * $width / $width_old;
+                if ($height > $height) {
+                    $height = $height;
+                    $width = $width_old * $height / $height_old;
+                }else
+                    $width = $width;
+            }
+        };
+
+        $width = intval($width);
+        $height = intval($height);
+        $new_img = @imagecreatetruecolor($width, $height);
+
+        if ($new_img) {
+            $source_old = $source;
+            imageAlphaBlending($new_img, false);
+            imageSaveAlpha($new_img, true);
+            imagecopyresampled($new_img, $source, 0, 0, 0, 0, $width, $height, $width_old, $height_old);
+            $source = $new_img;
+        }
+        return $source;
+    }
+    
+    public function add_file($id, $path,$max_size=999999) {
         $img_size = getimagesize($path);
         $mime = $img_size['mime'];
+        $width = $img_size['mime'];
+        $height = $img_size['mime'];
         $delete_after_complete = false;
 
-        if ($mime != "image/jpeg" && $mime != "image/png") {
+        if (($mime != "image/jpeg" && $mime != "image/png") || ($width>$max_size || $height>$max_size)) {
             $source = loadImageByType($path, $mime);
             if ($source) {
-                imagepng($source, "_tmp.png");
-                $mime = "image/png";
-                $path = "_tmp.png";
+                $source=$this->_resize_img($source,$width,$height,$max_size);
+                imagejpeg($source, "_tmp.jpg");
+                $mime = "image/jpeg";
+                $path = "_tmp.jpg";
                 $delete_after_complete = true;
             } else {
                 $path = "";
@@ -177,8 +237,8 @@ class HolyFB2 {
         };
 
         if ($delete_after_complete) {
-            if (file_exists("_tmp.png")) {
-                unlink("_tmp.png");
+            if (file_exists("_tmp.jpg")) {
+                unlink("_tmp.jpg");
             }
         }
     }
@@ -223,7 +283,7 @@ class HolyFB2 {
         } else {
             $text = strip_tags_smart($text, Array("<p>","<strong>","<emphasis>","image","<i>","<b>","<br>"));
         };
-        $text = str_replace(Array("<br>", "</br>"), "", $text);
+        $text = str_replace(Array("<br>", "</br>"), "</p><p>", $text);
         $text = str_replace(Array("<i>", "</i>"), Array("<emphasis>", "</emphasis>"), $text);
         $text = str_replace(Array("<b>", "</b>"), Array("<strong>", "</strong>"), $text);
         $text = str_replace(Array("\r\n","\r","\n"), "", $text);
