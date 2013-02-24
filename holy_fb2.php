@@ -1,4 +1,5 @@
 <?php
+
 include_once("strip_tags_smart/strip_tags_smart.php");
 
 function loadImageByType($filename, $type) {
@@ -94,7 +95,7 @@ class HolyFB2 {
         };
         $out[] = '</author>';
 
-        $out[] = $this->prepare_tag("book-title", $data['title']);
+        $out[] = $this->prepare_tag("book-title", $data['book-title']);
         $out[] = $this->prepare_tag("lang", $data['lang']);
         if ($data['annotation']) {
             $out[] = $this->prepare_tag("annotation", $this->prepare_text($data['annotation']));
@@ -137,26 +138,26 @@ class HolyFB2 {
         $this->file_append(Array("</body>"));
     }
 
-    public function add_section($title, $text) {
+    public function add_section($title, $text, $convert_br_to_p = true) {
         $out = array();
 
         $out[] = "<section>";
         $out[] = $this->prepare_tag("title", "<p>" . $title . "</p>");
         if (is_array($text)) {
             foreach ($text as $line) {
-                $out[] = $this->prepare_text("<p>" . $line . "</p>", false);
+                $out[] = $this->prepare_text("<p>" . $line . "</p>", false, $convert_br_to_p);
             }
         } else {
-            $out[] = $this->prepare_text("<p>" . $text . "</p>", false);
+            $out[] = $this->prepare_text("<p>" . $text . "</p>", false, $convert_br_to_p);
         };
         $out[] = "</section>";
 
         $this->file_append($out);
     }
-    
-    private function _resize_img($source,$width_old,$height_old,$max_size) {
-        $width=$max_size;
-        $height=$max_size;
+
+    private function _resize_img($source, $width_old, $height_old, $max_size) {
+        $width = $max_size;
+        $height = $max_size;
         if (($width_old == 0) || ($height_old == 0)) {
             $width_old = imagesx($source);
             $height_old = imagesy($source);
@@ -206,18 +207,18 @@ class HolyFB2 {
         }
         return $source;
     }
-    
-    public function add_file($id, $path,$max_size=999999) {
+
+    public function add_file($id, $path, $max_size = 999999) {
         $img_size = getimagesize($path);
         $mime = $img_size['mime'];
         $width = $img_size[0];
         $height = $img_size[1];
         $delete_after_complete = false;
 
-        if (($mime != "image/jpeg" && $mime != "image/png") || ($width>$max_size || $height>$max_size)) {
+        if (($mime != "image/jpeg" && $mime != "image/png") || ($width > $max_size || $height > $max_size)) {
             $source = loadImageByType($path, $mime);
             if ($source) {
-                $source=$this->_resize_img($source,$width,$height,$max_size);
+                $source = $this->_resize_img($source, $width, $height, $max_size);
                 imagejpeg($source, "_tmp.jpg");
                 $mime = "image/jpeg";
                 $path = "_tmp.jpg";
@@ -254,7 +255,7 @@ class HolyFB2 {
         }
     }
 
-    protected function prepare_text($text, $clear_img = true) {
+    protected function prepare_text($text, $clear_img = true, $convert_br_to_p = true) {
         if (!$clear_img) {
             preg_match_all('/\<(.*)img(.*)src(.*)=(.*)\>/isU', $text, $result);
             if (is_array($result[4])) {
@@ -279,14 +280,18 @@ class HolyFB2 {
         }
 
         if ($clear_img) {
-            $text = strip_tags_smart($text, Array("<p>","<strong>","<emphasis>","<i>","<b>","<br>"));
+            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "<i>", "<b>", "<br>"));
         } else {
-            $text = strip_tags_smart($text, Array("<p>","<strong>","<emphasis>","image","<i>","<b>","<br>"));
+            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "image", "<i>", "<b>", "<br>"));
         };
-        $text = str_replace(Array("<br>", "</br>"), "</p><p>", $text);
+        if ($convert_br_to_p) {
+            $text = str_replace(Array("<br>", "</br>"), "</p><p>", $text);
+        }else{
+            $text = str_replace(Array("<br>", "</br>"), "", $text);
+        }
         $text = str_replace(Array("<i>", "</i>"), Array("<emphasis>", "</emphasis>"), $text);
         $text = str_replace(Array("<b>", "</b>"), Array("<strong>", "</strong>"), $text);
-        $text = str_replace(Array("\r\n","\r","\n"), "", $text);
+        $text = str_replace(Array("\r\n", "\r", "\n"), "", $text);
         return $text;
     }
 
