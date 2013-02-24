@@ -210,8 +210,8 @@ class HolyFB2 {
     public function add_file($id, $path,$max_size=999999) {
         $img_size = getimagesize($path);
         $mime = $img_size['mime'];
-        $width = $img_size['mime'];
-        $height = $img_size['mime'];
+        $width = $img_size[0];
+        $height = $img_size[1];
         $delete_after_complete = false;
 
         if (($mime != "image/jpeg" && $mime != "image/png") || ($width>$max_size || $height>$max_size)) {
