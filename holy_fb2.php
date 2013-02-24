@@ -59,7 +59,7 @@ class HolyFB2 {
         $out[] = $this->prepare_tag("id", $data['id']);
 
         $out[] = '</document-info>';
-        
+
         return $out;
     }
 
@@ -92,14 +92,14 @@ class HolyFB2 {
     public function write_header($data) {
         $data = array_merge($this->default_header, $data);
         $out = array();
-        
+
         $out[] = '<?xml version="1.0" encoding="' . $data['encoding'] . '"?>';
 
         //@todo выяснить, почему gribuser.ru
         $out[] = '<FictionBook xmlns="http://www.gribuser.ru/xml/fictionbook/2.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:l="http://www.w3.org/1999/xlink">';
 
         $out[] = '<description>';
-        
+
         $out = $this->_get_title_info($data, $out);
 
         $out = $this->_get_document_info($data, $out);
@@ -128,17 +128,21 @@ class HolyFB2 {
         $out[] = $this->prepare_tag("title", "<p>" . $title . "</p>");
         if (is_array($text)) {
             foreach ($text as $line) {
-                $out[] = $this->prepare_text("<p>".$line."</p>", false);
+                $out[] = $this->prepare_text("<p>" . $line . "</p>", false);
             }
-        }
-        $out[] = $this->prepare_text($text, false);
+        } else {
+            $out[] = $this->prepare_text($text, false);
+        };
         $out[] = "</section>";
 
         $this->file_append($out);
     }
 
-    public function add_file() {
-        
+    public function add_file($id, $path) {
+        $file_data = file_get_contents($path);
+        $data = base64_encode($file_data);
+        $out = Array('<binary id="' . $id . '" content-type="image/jpeg">' . $data . '</binary>');
+        $this->file_append($out);
     }
 
     protected function file_append($data, $create = false) {
@@ -153,6 +157,28 @@ class HolyFB2 {
     }
 
     protected function prepare_text($text, $clear_img = true) {
+        if (!$clear_img) {
+            preg_match_all('/\<(.*)img(.*)src(.*)=(.*)\>/isU', $text, $result);
+            if (is_array($result[4])) {
+                if (count($result[4]) > 0) {
+                    foreach ($result[4] as $_img){
+                        $_img_urls[]=str_replace("'","",$_img);
+                    }
+                    preg_match_all('/\<img(.*)\>/isU', $text, $result2);
+                    foreach ($result2[0] as $_pic){
+                        $ok=false;
+                        foreach ($_img_urls as $_img){
+                           if (!$ok){
+                               if (strpos($_pic, $_img)!==FALSE){
+                                   $ok=true;
+                                   $text=str_replace($_pic, '<image l:href="#'.$_img.'"/>', $text);
+                               }
+                           }
+                        }
+                    }
+                }
+            }
+        }
         return $text;
     }
 
@@ -168,7 +194,7 @@ class HolyFB2 {
         $tag.=">";
         $tag.=$text;
         $tag.="</{$tag_name}>";
-        
+
         return $tag;
     }
 
