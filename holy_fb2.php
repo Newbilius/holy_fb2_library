@@ -1,4 +1,5 @@
 <?php
+include_once("strip_tags_smart/strip_tags_smart.php");
 
 function loadImageByType($filename, $type) {
     switch ($type) {
@@ -156,18 +157,25 @@ class HolyFB2 {
 
         if ($mime != "image/jpeg" && $mime != "image/png") {
             $source = loadImageByType($path, $mime);
-            imagepng($source, "_tmp.png");
-            $mime = "image/png";
-            $path = "_tmp.png";
-            $delete_after_complete = true;
+            if ($source) {
+                imagepng($source, "_tmp.png");
+                $mime = "image/png";
+                $path = "_tmp.png";
+                $delete_after_complete = true;
+            } else {
+                $path = "";
+            }
         };
 
-        $file_data = file_get_contents($path);
-        $data = base64_encode($file_data);
+        if ($path) {
+            if (file_exists($path)) {
+                $file_data = file_get_contents($path);
+                $data = base64_encode($file_data);
+                $out = Array('<binary id="' . $id . '" content-type="' . $mime . '">' . $data . '</binary>');
+                $this->file_append($out);
+            };
+        };
 
-
-        $out = Array('<binary id="' . $id . '" content-type="' . $mime . '">' . $data . '</binary>');
-        $this->file_append($out);
         if ($delete_after_complete) {
             if (file_exists("_tmp.png")) {
                 unlink("_tmp.png");
@@ -192,7 +200,7 @@ class HolyFB2 {
             if (is_array($result[4])) {
                 if (count($result[4]) > 0) {
                     foreach ($result[4] as $_img) {
-                        $_img_urls[] = str_replace("'", "", $_img);
+                        $_img_urls[] = str_replace(Array("'", '"'), "", $_img); //@todo заменить на более полный фильтр
                     }
                     preg_match_all('/\<img(.*)\>/isU', $text, $result2);
                     foreach ($result2[0] as $_pic) {
@@ -209,15 +217,16 @@ class HolyFB2 {
                 }
             }
         }
-        
-        $text=  str_replace(Array("<br>","</br>"),"</p><p>",$text);
-        $text=  str_replace(Array("<i>","</i>"),Array("<emphasis>","</emphasis>"),$text);
-        $text=  str_replace(Array("<b>","</b>"),Array("<strong>","</strong>"),$text);
-        if ($clear_img){
-            $text=  strip_tags($text, "<p><strong><emphasis>");
-        }else{
-            $text=  strip_tags($text, "<p><strong><emphasis><image>");
+
+        if ($clear_img) {
+            $text = strip_tags_smart($text, Array("<p>","<strong>","<emphasis>","<i>","<b>","<br>"));
+        } else {
+            $text = strip_tags_smart($text, Array("<p>","<strong>","<emphasis>","image","<i>","<b>","<br>"));
         };
+        $text = str_replace(Array("<br>", "</br>"), "", $text);
+        $text = str_replace(Array("<i>", "</i>"), Array("<emphasis>", "</emphasis>"), $text);
+        $text = str_replace(Array("<b>", "</b>"), Array("<strong>", "</strong>"), $text);
+        $text = str_replace(Array("\r\n","\r","\n"), "", $text);
         return $text;
     }
 
@@ -231,11 +240,12 @@ class HolyFB2 {
         }
 
         $tag.=">";
-        $tag.=$text;
+        $tag.=$this->prepare_text($text);
         $tag.="</{$tag_name}>";
 
         return $tag;
     }
 
 }
+
 ?>
