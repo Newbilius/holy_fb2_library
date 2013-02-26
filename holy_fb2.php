@@ -236,20 +236,28 @@ class HolyFB2 {
             }
         };
 
+        $return=true;
+
         if ($path) {
             if (file_exists($path)) {
                 $file_data = file_get_contents($path);
                 $data = base64_encode($file_data);
                 $out = Array('<binary id="' . $id . '" content-type="' . $mime . '">' . $data . '</binary>');
                 $this->file_append($out);
-            };
-        };
+                $return=true;
+            }else{
+                $return=false;
+            }
+        }else{
+                $return=false;
+            }
 
         if ($delete_after_complete) {
             if (file_exists("_tmp.jpg")) {
                 unlink("_tmp.jpg");
             }
         }
+        return $return;
     }
 
     protected function file_append($data, $create = false) {
