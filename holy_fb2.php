@@ -288,9 +288,9 @@ class HolyFB2 {
         }
 
         if ($clear_img) {
-            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "<i>", "<b>", "<br>"));
+            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "<i>", "<b>", "<br>","<code>","<table>","<tr>","<td>","<th>"));
         } else {
-            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "image", "<i>", "<b>", "<br>"));
+            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "image", "<i>", "<b>", "<br>","<code>","<table>","<tr>","<td>","<th>"));
         };
         if ($convert_br_to_p) {
             $text = str_replace(Array("<br>", "</br>"), "</p><p>", $text);
