@@ -236,20 +236,28 @@ class HolyFB2 {
             }
         };
 
+        $return=true;
+
         if ($path) {
             if (file_exists($path)) {
                 $file_data = file_get_contents($path);
                 $data = base64_encode($file_data);
                 $out = Array('<binary id="' . $id . '" content-type="' . $mime . '">' . $data . '</binary>');
                 $this->file_append($out);
-            };
-        };
+                $return=true;
+            }else{
+                $return=false;
+            }
+        }else{
+                $return=false;
+            }
 
         if ($delete_after_complete) {
             if (file_exists("_tmp.jpg")) {
                 unlink("_tmp.jpg");
             }
         }
+        return $return;
     }
 
     protected function file_append($data, $create = false) {
@@ -263,7 +271,7 @@ class HolyFB2 {
         }
     }
 
-    protected function prepare_text($text, $clear_img = true, $convert_br_to_p = true) {
+    public static function prepare_text($text, $clear_img = true, $convert_br_to_p = true) {
         if (!$clear_img) {
             preg_match_all('/\<(.*)img(.*)src(.*)=(.*)\>/isU', $text, $result);
             if (is_array($result[4])) {
@@ -288,9 +296,9 @@ class HolyFB2 {
         }
 
         if ($clear_img) {
-            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "<i>", "<b>", "<br>"));
+            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "<i>", "<b>", "<br>","<code>","<table>","<tr>","<td>","<th>","<empty-line>"));
         } else {
-            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "image", "<i>", "<b>", "<br>"));
+            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "image", "<i>", "<b>", "<br>","<code>","<table>","<tr>","<td>","<th>","<empty-line>"));
         };
         if ($convert_br_to_p) {
             $text = str_replace(Array("<br>", "</br>"), "</p><p>", $text);
