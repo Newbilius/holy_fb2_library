@@ -1,4 +1,4 @@
-<?
+<?php
 
 function print_pr($data) {
     echo "<pre>" . print_r($data, true) . "</pre>";

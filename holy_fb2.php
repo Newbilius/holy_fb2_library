@@ -328,5 +328,4 @@ class HolyFB2 {
     }
 
 }
-
 ?>
