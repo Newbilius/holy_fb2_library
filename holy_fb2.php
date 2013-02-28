@@ -296,9 +296,9 @@ class HolyFB2 {
         }
 
         if ($clear_img) {
-            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "<i>", "<b>", "<br>","<code>","<table>","<tr>","<td>","<th>"));
+            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "<i>", "<b>", "<br>","<code>","<table>","<tr>","<td>","<th>","<empty-line>"));
         } else {
-            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "image", "<i>", "<b>", "<br>","<code>","<table>","<tr>","<td>","<th>"));
+            $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "image", "<i>", "<b>", "<br>","<code>","<table>","<tr>","<td>","<th>","<empty-line>"));
         };
         if ($convert_br_to_emptyline) {
             $text = str_replace(Array("<br>", "</br>" ,"<br/>"), "<empty-line/>", $text);
@@ -328,5 +328,4 @@ class HolyFB2 {
     }
 
 }
-
 ?>
