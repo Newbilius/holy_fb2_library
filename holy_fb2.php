@@ -146,17 +146,17 @@ class HolyFB2 {
         $this->file_append(Array("</body>"));
     }
 
-    public function add_section($title, $text, $convert_br_to_p = true) {
+    public function add_section($title, $text, $convert_br_to_emptyline = true) {
         $out = array();
 
         $out[] = "<section>";
         $out[] = $this->prepare_tag("title", "<p>" . $title . "</p>");
         if (is_array($text)) {
             foreach ($text as $line) {
-                $out[] = $this->prepare_text("<p>" . $line . "</p>", false, $convert_br_to_p);
+                $out[] = $this->prepare_text("<p>" . $line . "</p>", false, $convert_br_to_emptyline);
             }
         } else {
-            $out[] = $this->prepare_text("<p>" . $text . "</p>", false, $convert_br_to_p);
+            $out[] = $this->prepare_text("<p>" . $text . "</p>", false, $convert_br_to_emptyline);
         };
         $out[] = "</section>";
 
@@ -271,7 +271,7 @@ class HolyFB2 {
         }
     }
 
-    protected function prepare_text($text, $clear_img = true, $convert_br_to_p = true) {
+    protected function prepare_text($text, $clear_img = true, $convert_br_to_emptyline = true) {
         if (!$clear_img) {
             preg_match_all('/\<(.*)img(.*)src(.*)=(.*)\>/isU', $text, $result);
             if (is_array($result[4])) {
@@ -300,10 +300,10 @@ class HolyFB2 {
         } else {
             $text = strip_tags_smart($text, Array("<p>", "<strong>", "<emphasis>", "image", "<i>", "<b>", "<br>","<code>","<table>","<tr>","<td>","<th>"));
         };
-        if ($convert_br_to_p) {
-            $text = str_replace(Array("<br>", "</br>"), "</p><p>", $text);
+        if ($convert_br_to_emptyline) {
+            $text = str_replace(Array("<br>", "</br>" ,"<br/>"), "<empty-line/>", $text);
         }else{
-            $text = str_replace(Array("<br>", "</br>"), "", $text);
+            $text = str_replace(Array("<br>", "</br>" ,"<br/>"), "", $text);
         }
         $text = str_replace(Array("<i>", "</i>"), Array("<emphasis>", "</emphasis>"), $text);
         $text = str_replace(Array("<b>", "</b>"), Array("<strong>", "</strong>"), $text);
